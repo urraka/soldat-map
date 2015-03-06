@@ -183,7 +183,7 @@ function Renderer(gfx, map, on_ready)
 			for (var j = 0; j < 3; j++)
 			{
 				var vertex = poly.vertices[j];
-				vbo.push(vertex.x, -vertex.y, vertex.u, -vertex.v, vertex.color);
+				vbo.push(vertex.x, -vertex.y, vertex.u, vertex.v, vertex.color);
 			}
 
 			ibo.push(idx + 0, idx + 1, idx + 2);
