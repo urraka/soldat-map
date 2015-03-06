@@ -1,0 +1,6 @@
+* GAME VERSION 1.6.7 *
+
+CTF
+
+Rotten
+Fixed missing scenery amb_fog_ground-sk_soft.png

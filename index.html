@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8" />
+	<title>Soldat Map Viewer</title>
+	<script src="src/gfx.js"></script>
+	<script src="src/map.js"></script>
+	<script src="src/render.js"></script>
+	<style type="text/css">
+		html,body {margin:0;padding:0;height:100%;}
+		canvas {display:block;width:100%;height:100%;}
+	</style>
+</head>
+<body>
+<canvas></canvas>
+<script>
+
+var dx = 0;
+var dy = 0;
+var scale = 1;
+
+if (window.location.hash.length > 1)
+	http_get("data/maps/" + window.location.hash.substr(1) + ".pms", on_load);
+else
+	http_get("data/maps/ctf_Ash.pms", on_load);
+
+window.addEventListener("hashchange", function() {
+	http_get("data/maps/" + window.location.hash.substr(1) + ".pms", on_load);
+});
+
+function on_load(buffer)
+{
+	if (!buffer)
+		return;
+
+	canvas = document.querySelector("canvas");
+	gfx = gfx_create_context(canvas, {alpha: false});
+	map = Map.parse(buffer);
+
+	dx = 0;
+	dy = 0;
+	scale = 1;
+
+	renderer = new MapRenderer(gfx, map, function() {
+		window.addEventListener("resize", draw);
+		window.addEventListener("mousedown", mousedown);
+		window.addEventListener("keydown", keydown);
+		draw();
+	});
+}
+
+function keydown(event)
+{
+	event.keyCode === 107 && ((scale *= 1.25)||1) && draw();
+	event.keyCode === 109 && ((scale /= 1.25)||1) && draw();
+}
+
+function mousedown(event)
+{
+	var x = event.clientX;
+	var y = event.clientY;
+
+	function mousemove(event)
+	{
+		var offsetx = (event.clientX - x);
+		var offsety = (y - event.clientY);
+
+		x = event.clientX;
+		y = event.clientY;
+
+		dx += offsetx;
+		dy += offsety;
+
+		requestAnimationFrame(draw);
+	}
+
+	function mouseup()
+	{
+		window.removeEventListener("mouseup", mouseup);
+		window.removeEventListener("mousemove", mousemove);
+	}
+
+	window.addEventListener("mouseup", mouseup);
+	window.addEventListener("mousemove", mousemove);
+}
+
+function draw()
+{
+	var w = canvas.width = canvas.offsetWidth;
+	var h = canvas.height = canvas.offsetHeight;
+
+	gfx.viewport(0, 0, w, h);
+	gfx.projection(mat3ortho(0, w, 0, h, mat3()));
+	gfx.blend(gfx.SrcAlpha, gfx.OneMinusSrcAlpha, gfx.SrcAlpha, gfx.OneMinusSrcAlpha);
+	gfx.clear_color(0, 0, 0, 1);
+	gfx.clear();
+
+	renderer.draw(w/2 + dx, h/2 + dy, scale);
+}
+
+function http_get(url, callback)
+{
+	var request = new XMLHttpRequest();
+	request.open("GET", url);
+	request.responseType = "arraybuffer";
+
+	request.addEventListener("loadend", function() {
+		callback(request.status === 200 ? request.response : null);
+	});
+
+	request.send();
+}
+
+</script>
+</body>
+</html>
