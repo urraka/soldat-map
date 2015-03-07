@@ -68,8 +68,8 @@ function mousedown(event)
 		x = event.clientX;
 		y = event.clientY;
 
-		dx += offsetx;
-		dy += offsety;
+		dx += offsetx / scale;
+		dy += offsety / scale;
 
 		requestAnimationFrame(draw);
 	}
@@ -95,7 +95,7 @@ function draw()
 	gfx.clear_color(0, 0, 0, 1);
 	gfx.clear();
 
-	renderer.draw(w/2 + dx, h/2 + dy, scale);
+	renderer.draw(1/scale * w/2 + dx, 1/scale * h/2 + dy, scale);
 }
 
 function http_get(url, callback)

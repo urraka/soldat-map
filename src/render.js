@@ -220,8 +220,8 @@ function Renderer(gfx, map, on_ready)
 	{
 		var m = mat3();
 
-		m[0] = s; m[3] = 0; m[6] = x;
-		m[1] = 0; m[4] = s; m[7] = y;
+		m[0] = s; m[3] = 0; m[6] = x * s;
+		m[1] = 0; m[4] = s; m[7] = y * s;
 		m[2] = 0; m[5] = 0; m[8] = 1;
 
 		gfx.transform(m);
