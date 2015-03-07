@@ -15,6 +15,10 @@
 <canvas></canvas>
 <script>
 
+var canvas = document.querySelector("canvas");
+var gfx = gfx_create_context(canvas, {alpha: false});
+var map = null;
+var renderer = null;
 var dx = 0;
 var dy = 0;
 var scale = 1;
@@ -28,25 +32,34 @@ window.addEventListener("hashchange", function() {
 	http_get("data/maps/" + window.location.hash.substr(1) + ".pms", on_load);
 });
 
+window.addEventListener("resize", draw);
+window.addEventListener("mousedown", mousedown);
+window.addEventListener("keydown", keydown);
+window.addEventListener("wheel", wheel);
+window.addEventListener("dblclick", dblclick);
+
 function on_load(buffer)
 {
-	if (!buffer)
-		return;
-
-	canvas = document.querySelector("canvas");
-	gfx = gfx_create_context(canvas, {alpha: false});
-	map = Map.parse(buffer);
-
 	dx = 0;
 	dy = 0;
 	scale = 1;
 
-	renderer = new MapRenderer(gfx, map, function() {
-		window.addEventListener("resize", draw);
-		window.addEventListener("mousedown", mousedown);
-		window.addEventListener("keydown", keydown);
-		draw();
-	});
+	if (!buffer)
+		return;
+
+	map = Map.parse(buffer);
+	renderer = new MapRenderer(gfx, map, function() { draw(); });
+}
+
+function dblclick()
+{
+	(scale = 1) && draw();
+}
+
+function wheel(event)
+{
+	event.deltaY < 0 ? (scale *= 1.25) : (scale /= 1.25);
+	draw();
 }
 
 function keydown(event)
@@ -86,6 +99,9 @@ function mousedown(event)
 
 function draw()
 {
+	if (!renderer)
+		return;
+
 	var w = canvas.width = canvas.offsetWidth;
 	var h = canvas.height = canvas.offsetHeight;
 
