@@ -35,7 +35,7 @@ function Renderer(gfx, map, on_ready)
 			var image = new Image();
 
 			image.onload = function() {
-				textures[index] = create_texture(image);
+				textures[index] = create_texture(image, index === 0);
 				++loaded === total && on_done();
 			};
 
@@ -54,17 +54,37 @@ function Renderer(gfx, map, on_ready)
 			textures[i] !== null && load(i);
 	}
 
-	function create_texture(image)
+	function next_pot(x)
+	{
+		var result = 1;
+
+		while (result < x)
+			result = result << 1;
+
+		return result;
+	}
+
+	function create_texture(image, pot)
 	{
 		if (image.src.split(".").pop().toLowerCase() === "png")
 			return gfx.create_texture(image);
 
 		var canvas = document.createElement("canvas");
 		var context = canvas.getContext("2d");
-		var w = canvas.width = image.width;
-		var h = canvas.height = image.height;
 
-		context.drawImage(image, 0, 0);
+		var w = image.width;
+		var h = image.height;
+
+		if (pot)
+		{
+			w = next_pot(w);
+			h = next_pot(h);
+		}
+
+		canvas.width = w;
+		canvas.height = h;
+
+		context.drawImage(image, 0, 0, w, h);
 
 		var imagedata = context.getImageData(0, 0, w, h);
 		var data = imagedata.data;
