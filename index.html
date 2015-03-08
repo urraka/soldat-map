@@ -1,17 +1,45 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<meta http-equiv="Content-type" content="text/html; charset=utf-8" />
-	<title>Soldat Map Viewer</title>
-	<script src="src/gfx.js"></script>
-	<script src="src/map.js"></script>
-	<script src="src/render.js"></script>
-	<style type="text/css">
-		html,body {margin:0;padding:0;height:100%;}
-		canvas {display:block;width:100%;height:100%;}
-	</style>
+<meta http-equiv="Content-type" content="text/html; charset=utf-8" />
+<title>Soldat Map Viewer</title>
+<script src="src/gfx.js"></script>
+<script src="src/map.js"></script>
+<script src="src/render.js"></script>
+<style type="text/css">
+html,body {margin:0;padding:0;height:100%;}
+body {background:#000;color:#ccc;font-family:sans-serif;font-size:14px;}
+canvas {display:block;width:100%;height:100%;}
+.loader,.error {display:none;}
+
+.loader {width:150px;height:150px;line-height:150px;position:relative;}
+.loader {box-sizing:border-box;text-align:center;z-index:0;}
+.loader::before,.loader::after
+{opacity:0;box-sizing:border-box;content:"\0020";position:absolute;top:0;left:0;width:100%;height:100%;
+border-radius:100px;border:5px solid #fff;box-shadow:0 0 50px #fff, inset 0 0 50px #fff;}
+.loader::after {z-index:1;animation:gogoloader 2s infinite 1s;-webkit-animation:gogoloader 2s infinite 1s;}
+.loader::before {z-index:2;animation:gogoloader 2s infinite;-webkit-animation:gogoloader 2s infinite;}
+
+@-webkit-keyframes gogoloader {
+	0%   {-webkit-transform:scale(0);opacity:0;}
+	50%  {opacity:1;}
+	100% {-webkit-transform:scale(1);opacity:0;}
+}
+@keyframes gogoloader {
+	0%   {transform:scale(0);opacity:0;}
+	50%  {opacity:1;}
+	100% {transform:scale(1);opacity:0;}
+}
+
+body.loading,body.loaderror {display:flex;align-items:center;justify-content:center;}
+body.loading canvas,body.loaderror canvas {display:none;}
+body.loading .loader {display:block;}
+body.loaderror .error {display:block;}
+</style>
 </head>
 <body>
+<div class="loader">LOADING</div>
+<div class="error">MAP NOT FOUND</div>
 <canvas></canvas>
 <script>
 
@@ -24,12 +52,12 @@ var dy = 0;
 var scale = 1;
 
 if (window.location.hash.length > 1)
-	http_get("data/maps/" + window.location.hash.substr(1) + ".pms", on_load);
+	load_map(window.location.hash.substr(1));
 else
-	http_get("data/maps/ctf_Ash.pms", on_load);
+	load_map("ctf_Ash");
 
 window.addEventListener("hashchange", function() {
-	http_get("data/maps/" + window.location.hash.substr(1) + ".pms", on_load);
+	load_map(window.location.hash.substr(1));
 });
 
 window.addEventListener("resize", draw);
@@ -38,6 +66,14 @@ window.addEventListener("keydown", keydown);
 window.addEventListener("wheel", wheel);
 window.addEventListener("dblclick", dblclick);
 
+function load_map(name)
+{
+	document.body.classList.add("loading");
+	document.body.classList.remove("loaderror");
+
+	http_get("data/maps/" + name + ".pms", on_load);
+}
+
 function on_load(buffer)
 {
 	dx = 0;
@@ -45,10 +81,18 @@ function on_load(buffer)
 	scale = 1;
 
 	if (!buffer)
+	{
+		document.body.classList.remove("loading");
+		document.body.classList.add("loaderror");
 		return;
+	}
 
 	map = Map.parse(buffer);
-	renderer = new MapRenderer(gfx, map, function() { draw(); });
+
+	renderer = new MapRenderer(gfx, map, function() {
+		document.body.classList.remove("loading");
+		draw();
+	});
 }
 
 function dblclick()
