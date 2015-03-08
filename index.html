@@ -84,6 +84,7 @@ function on_load(buffer)
 	{
 		document.body.classList.remove("loading");
 		document.body.classList.add("loaderror");
+		document.title = "Soldat Map Viewer";
 		return;
 	}
 
@@ -91,6 +92,7 @@ function on_load(buffer)
 
 	renderer = new MapRenderer(gfx, map, function() {
 		document.body.classList.remove("loading");
+		document.title = map.name + " - Soldat Map Viewer";
 		draw();
 	});
 }
