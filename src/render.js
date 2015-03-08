@@ -39,7 +39,12 @@ function Renderer(gfx, map, on_ready)
 				++loaded === total && on_done();
 			};
 
-			image.src = textures[index];
+			image.onerror = function() {
+				textures[index] = gfx.White;
+				++loaded === total && on_done();
+			};
+
+			image.src = textures[index].toLowerCase();
 		}
 
 		for (var i = 0; i < textures.length; i++)
