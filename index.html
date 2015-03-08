@@ -50,6 +50,7 @@ var renderer = null;
 var dx = 0;
 var dy = 0;
 var scale = 1;
+var mouse = {x: window.innerWidth/2, y: window.innerHeight/2};
 
 if (window.location.hash.length > 1)
 	load_map(window.location.hash.substr(1));
@@ -62,6 +63,7 @@ window.addEventListener("hashchange", function() {
 
 window.addEventListener("resize", draw);
 window.addEventListener("mousedown", mousedown);
+window.addEventListener("mousemove", mousemove);
 window.addEventListener("keydown", keydown);
 window.addEventListener("wheel", wheel);
 window.addEventListener("dblclick", dblclick);
@@ -97,6 +99,12 @@ function on_load(buffer)
 	});
 }
 
+function mousemove(event)
+{
+	mouse.x = event.clientX;
+	mouse.y = event.clientY;
+}
+
 function dblclick()
 {
 	(scale = 1) && draw();
@@ -104,14 +112,35 @@ function dblclick()
 
 function wheel(event)
 {
+	var prev_scale = scale;
+	var offsetx =  (mouse.x - window.innerWidth / 2);
+	var offsety = -(mouse.y - window.innerHeight / 2);
+
 	event.deltaY < 0 ? (scale *= 1.25) : (scale /= 1.25);
+
+	dx += offsetx / scale - offsetx / prev_scale;
+	dy += offsety / scale - offsety / prev_scale;
+
 	draw();
 }
 
 function keydown(event)
 {
-	event.keyCode === 107 && ((scale *= 1.25)||1) && draw();
-	event.keyCode === 109 && ((scale /= 1.25)||1) && draw();
+	var prev_scale = scale;
+
+	event.keyCode === 107 && (scale *= 1.25);
+	event.keyCode === 109 && (scale /= 1.25);
+
+	if (prev_scale !== scale)
+	{
+		var offsetx =  (mouse.x - window.innerWidth / 2);
+		var offsety = -(mouse.y - window.innerHeight / 2);
+
+		dx += offsetx / scale - offsetx / prev_scale;
+		dy += offsety / scale - offsety / prev_scale;
+
+		draw();
+	}
 }
 
 function mousedown(event)
