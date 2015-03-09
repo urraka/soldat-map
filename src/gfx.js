@@ -101,6 +101,7 @@ function Context(canvas, params)
 	mat3identity(this.view);
 	mat3identity(this.proj);
 
+	this.bound_vbo = null;
 	this.framebuffer = gl.createFramebuffer();
 	this.program = shader_create(gl, vs_src, fs_src);
 	this.loc_mvp = gl.getUniformLocation(this.program, "mvp");;
@@ -258,11 +259,16 @@ Context.prototype.draw = function(mode, vbo, ibo, offset, count)
 		this.mvp_dirty = false;
 	}
 
-	gl.bindBuffer(gl.ARRAY_BUFFER, vbo.id);
+	if (vbo !== this.bound_vbo)
+	{
+		this.bound_vbo = vbo;
 
-	gl.vertexAttribPointer(this.loc_pos, 2, gl.FLOAT, false, vertex_size, 0);
-	gl.vertexAttribPointer(this.loc_tex, 2, gl.FLOAT, false, vertex_size, 2 * f32_size);
-	gl.vertexAttribPointer(this.loc_clr, 4, gl.UNSIGNED_BYTE, true, vertex_size, 4 * f32_size);
+		gl.bindBuffer(gl.ARRAY_BUFFER, vbo.id);
+
+		gl.vertexAttribPointer(this.loc_pos, 2, gl.FLOAT, false, vertex_size, 0);
+		gl.vertexAttribPointer(this.loc_tex, 2, gl.FLOAT, false, vertex_size, 2 * f32_size);
+		gl.vertexAttribPointer(this.loc_clr, 4, gl.UNSIGNED_BYTE, true, vertex_size, 4 * f32_size);
+	}
 
 	if (ibo !== null)
 	{
