@@ -12,6 +12,7 @@ function Renderer(gfx, map, on_ready)
 	var batches = {};
 	var active_batches = [];
 	var textures = [];
+	var black_texture = null;
 
 	var config = {
 		background: true,
@@ -47,13 +48,18 @@ function Renderer(gfx, map, on_ready)
 		for (var i = 0, n = calls.length; i < n; i++)
 		{
 			var call = calls[i];
-			gfx.bind(textures[call.texture + 1]);
+			gfx.bind(textures[call.texture + 2]);
 			gfx.draw(mode, vbo, ibo, base + call.offset, call.count);
 		}
 	}
 
 	function load_textures(on_done)
 	{
+		black_texture = gfx.create_texture(1, 1, gfx.RGBA, function(x, y, rgba) {
+			rgba[0] = rgba[1] = rgba[2] = 0.5;
+			rgba[3] = 1;
+		});
+
 		for (var i = 0; i < map.images.length + 1; i++)
 			textures.push(null);
 
@@ -409,6 +415,7 @@ function Renderer(gfx, map, on_ready)
 		{
 			config[name] = value;
 			batches.polygons.calls[0].texture = value ? 0 : -1;
+			batches.wireframe.calls[0].texture = value ? -1 : -2;
 		}
 	}
 
@@ -430,7 +437,7 @@ function Renderer(gfx, map, on_ready)
 
 	load_textures(function() {
 		textures[0].wrap(gfx.Repeat, gfx.Repeat);
-		textures.unshift(gfx.White);
+		textures.unshift(black_texture, gfx.White);
 		init();
 		on_ready();
 	});
