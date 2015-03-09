@@ -109,13 +109,7 @@ function on_load(buffer)
 	dy = 0;
 	scale = 1;
 
-	document.querySelector("#cfg-background").checked = true;
-	document.querySelector("#cfg-scenery_front").checked = true;
-	document.querySelector("#cfg-scenery_middle").checked = true;
-	document.querySelector("#cfg-scenery_back").checked = true;
-	document.querySelector("#cfg-polygons").checked = true;
-	document.querySelector("#cfg-texture").checked = true;
-	document.querySelector("#cfg-wireframe").checked = false;
+	var config = renderer ? renderer.config() : {};
 
 	if (!buffer)
 	{
@@ -143,6 +137,9 @@ function on_load(buffer)
 		dx = xmin + (xmax - xmin) * 0.5;
 		dy = ymin + (ymax - ymin) * 0.5;
 		scale = 0.9 * Math.min(window.innerWidth / (xmax - xmin), window.innerHeight / (ymax - ymin));
+
+		for (var name in config)
+			renderer.config(name, config[name]);
 
 		draw();
 	});

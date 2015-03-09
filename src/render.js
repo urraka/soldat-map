@@ -435,6 +435,9 @@ function Renderer(gfx, map, on_ready)
 
 	function set_config(name, value)
 	{
+		if (arguments.length === 0)
+			return config;
+
 		if ((name in batches) && (config[name] !== value))
 		{
 			config[name] = value;
