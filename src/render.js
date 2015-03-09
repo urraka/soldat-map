@@ -5,12 +5,23 @@ exports.MapRenderer = Renderer;
 function Renderer(gfx, map, on_ready)
 {
 	this.draw = draw;
+	this.config = set_config;
 
 	var vbo = null;
 	var ibo = null;
 	var batches = {};
 	var active_batches = [];
 	var textures = [];
+
+	var config = {
+		background: true,
+		scenery_back: true,
+		scenery_middle: true,
+		scenery_front: true,
+		polygons: true,
+		wireframe: false,
+		texture: true
+	};
 
 	function Batch(mode, ibo_index, vbo_index)
 	{
@@ -372,13 +383,33 @@ function Renderer(gfx, map, on_ready)
 
 		// set active batches
 
-		active_batches.push(
-			batches.background,
-			batches.scenery_back,
-			batches.scenery_middle,
-			batches.polygons,
-			batches.scenery_front
-		);
+		update_active_batches();
+	}
+
+	function update_active_batches()
+	{
+		active_batches = [];
+
+		config.background     && active_batches.push(batches.background);
+		config.scenery_back   && active_batches.push(batches.scenery_back);
+		config.scenery_middle && active_batches.push(batches.scenery_middle);
+		config.polygons       && active_batches.push(batches.polygons);
+		config.scenery_front  && active_batches.push(batches.scenery_front);
+		config.wireframe      && active_batches.push(batches.wireframe);
+	}
+
+	function set_config(name, value)
+	{
+		if ((name in batches) && (config[name] !== value))
+		{
+			config[name] = value;
+			update_active_batches();
+		}
+		else if (name === "texture")
+		{
+			config[name] = value;
+			batches.polygons.calls[0].texture = value ? 0 : -1;
+		}
 	}
 
 	function draw(x, y, s)
