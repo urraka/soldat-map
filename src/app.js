@@ -28,10 +28,69 @@ document.querySelector(".view-options").addEventListener("mousedown", function(e
 	event.stopPropagation();
 });
 
-document.querySelector(".view-options").addEventListener("change", function(event) {
+function any_checked(selector)
+{
+	var inputs = document.querySelectorAll(selector);
+	return [].slice.call(inputs).some(function(input) { return input.checked; });
+}
+
+document.querySelector(".view-options").addEventListener("change", function(event)
+{
 	if (renderer)
 	{
-		renderer.config(event.target.id.split("-").pop(), event.target.checked);
+		var name = event.target.id.split("-").pop();
+
+		if (name.lastIndexOf("highlight_", 0) === 0)
+		{
+			if (event.target.checked)
+			{
+				document.querySelector("#cfg-highlight").checked = true;
+				renderer.config("highlight", true);
+			}
+			else if (document.querySelectorAll("#cfg-highlight-options input:checked").length === 0)
+			{
+				document.querySelector("#cfg-highlight").checked = false;
+				renderer.config("highlight", false);
+			}
+
+			var inputs = document.querySelectorAll("#cfg-highlight-options input:checked");
+
+			var value = [].slice.call(inputs).map(function(input) {
+				return parseInt(input.id.split("_").pop());
+			});
+
+			renderer.config("highlight_list", value);
+		}
+		else if (name.lastIndexOf("scenery", 0) === 0)
+		{
+			var scenery = document.querySelector("#cfg-scenery");
+
+			if (name !== "scenery")
+			{
+				if (event.target.checked)
+					scenery.checked = true;
+				else if (document.querySelectorAll("#cfg-scenery-options input:checked").length === 0)
+					scenery.checked = false;
+			}
+
+			if (scenery.checked)
+			{
+				renderer.config("scenery_back", document.querySelector("#cfg-scenery_back").checked);
+				renderer.config("scenery_middle", document.querySelector("#cfg-scenery_middle").checked);
+				renderer.config("scenery_front", document.querySelector("#cfg-scenery_front").checked);
+			}
+			else
+			{
+				renderer.config("scenery_back", false);
+				renderer.config("scenery_middle", false);
+				renderer.config("scenery_front", false);
+			}
+		}
+		else
+		{
+			renderer.config(name, event.target.checked);
+		}
+
 		draw();
 	}
 });

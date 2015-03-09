@@ -18,18 +18,6 @@
 		<label for="cfg-background"></label><label for="cfg-background">Background</label>
 	</div>
 	<div>
-		<input checked="checked" id="cfg-scenery_back" type="checkbox" />
-		<label for="cfg-scenery_back"></label><label for="cfg-scenery_back">Scenery (back)</label>
-	</div>
-	<div>
-		<input checked="checked" id="cfg-scenery_middle" type="checkbox" />
-		<label for="cfg-scenery_middle"></label><label for="cfg-scenery_middle">Scenery (middle)</label>
-	</div>
-	<div>
-		<input checked="checked" id="cfg-scenery_front" type="checkbox" />
-		<label for="cfg-scenery_front"></label><label for="cfg-scenery_front">Scenery (front)</label>
-	</div>
-	<div>
 		<input checked="checked" id="cfg-polygons" type="checkbox" />
 		<label for="cfg-polygons"></label><label for="cfg-polygons">Polygons</label>
 	</div>
@@ -40,6 +28,67 @@
 	<div>
 		<input id="cfg-wireframe" type="checkbox" />
 		<label for="cfg-wireframe"></label><label for="cfg-wireframe">Wireframe</label>
+	</div>
+	<div>
+		<input checked="checked" id="cfg-scenery" type="checkbox" />
+		<label for="cfg-scenery"></label><label for="cfg-scenery">Scenery</label>
+	</div>
+	<div id="cfg-scenery-options" class="indent">
+		<div>
+			<input checked="checked" id="cfg-scenery_back" type="checkbox" />
+			<label for="cfg-scenery_back"></label><label for="cfg-scenery_back">Back</label>
+		</div>
+		<div>
+			<input checked="checked" id="cfg-scenery_middle" type="checkbox" />
+			<label for="cfg-scenery_middle"></label><label for="cfg-scenery_middle">Middle</label>
+		</div>
+		<div>
+			<input checked="checked" id="cfg-scenery_front" type="checkbox" />
+			<label for="cfg-scenery_front"></label><label for="cfg-scenery_front">Front</label>
+		</div>
+	</div>
+	<div>
+		<input id="cfg-highlight" type="checkbox" />
+		<label for="cfg-highlight"></label><label for="cfg-highlight">Highlight</label>
+	</div>
+	<div id="cfg-highlight-options" class="indent">
+		<script>
+			(function(options) {
+				for (var i = 0, n = options.length; i < n; i++)
+				{
+					document.writeln("<div>");
+					document.writeln("<input id=\"cfg-highlight_" + i + "\" type=\"checkbox\" />");
+					document.writeln("<label for=\"cfg-highlight_" + i + "\"></label>" +
+						"<label for=\"cfg-highlight_" + i + "\">" + options[i] + "</label>");
+					document.writeln("</div>");
+				}
+			})([
+				"Normal",
+				"Only Bullets Collide",
+				"Only Players Collide",
+				"No Collide",
+				"Ice",
+				"Deadly",
+				"Bloody deadly",
+				"Hurts",
+				"Regenerates",
+				"Lava",
+				"Alpha Bullets",
+				"Alpha Players",
+				"Bravo Bullets",
+				"Bravo Players",
+				"Charlie Bullets",
+				"Charlie Players",
+				"Delta Bullets",
+				"Delta Players",
+				"Bouncy",
+				"Explosive",
+				"Hurt Flaggers",
+				"Flagger Collides",
+				"Non Flagger Collides",
+				"Flag Collides"
+			]);
+		</script>
 	</div>
 </div>
 <script src="src/app.js"></script>

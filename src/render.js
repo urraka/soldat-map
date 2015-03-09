@@ -21,7 +21,9 @@ function Renderer(gfx, map, on_ready)
 		scenery_front: true,
 		polygons: true,
 		wireframe: false,
-		texture: true
+		texture: true,
+		highlight: false,
+		highlight_list: []
 	};
 
 	function Batch(mode, ibo_index, vbo_index)
@@ -334,10 +336,10 @@ function Renderer(gfx, map, on_ready)
 
 		// highlight batch
 
-		var hl_color = [255, 0, 0, 128];
+		var hl_color = [255, 255, 0, 128];
 
 		batches.highlight = new Batch(gfx.Triangles, idx.ibo, idx.vbo);
-		batches.highlight.calls.push(new DrawCall(0, 3 * polygons.length, -1));
+		batches.highlight.calls.push(new DrawCall(0, 0, -1));
 
 		for (var i = 0, n = polygons.length; i < n; i++)
 		{
@@ -400,8 +402,35 @@ function Renderer(gfx, map, on_ready)
 		config.scenery_back   && active_batches.push(batches.scenery_back);
 		config.scenery_middle && active_batches.push(batches.scenery_middle);
 		config.polygons       && active_batches.push(batches.polygons);
+		config.highlight      && active_batches.push(batches.highlight);
 		config.scenery_front  && active_batches.push(batches.scenery_front);
 		config.wireframe      && active_batches.push(batches.wireframe);
+	}
+
+	function update_highlight_batch()
+	{
+		var types = config.highlight_list;
+		var polygons = map.polygons;
+
+		var poly_indices = polygons.map(function(p, i) { return i; }).filter(function(i) {
+			return types.indexOf(polygons[i].type) !== -1;
+		});
+
+		batches.highlight.calls[0].count = 3 * poly_indices.length;
+
+		var ibo_index = batches.highlight.ibo_index;
+		var vbo_base = batches.highlight.vbo_index;
+
+		for (var i = 0, n = poly_indices.length; i < n; i++)
+		{
+			var vbo_index = vbo_base + 3 * poly_indices[i];
+
+			ibo.set(ibo_index++, vbo_index + 0);
+			ibo.set(ibo_index++, vbo_index + 1);
+			ibo.set(ibo_index++, vbo_index + 2);
+		}
+
+		ibo.upload(batches.highlight.ibo_index, 3 * poly_indices.length);
 	}
 
 	function set_config(name, value)
@@ -416,6 +445,11 @@ function Renderer(gfx, map, on_ready)
 			config[name] = value;
 			batches.polygons.calls[0].texture = value ? 0 : -1;
 			batches.wireframe.calls[0].texture = value ? -1 : -2;
+		}
+		else if (name === "highlight_list")
+		{
+			config[name] = value;
+			update_highlight_batch();
 		}
 	}
 
