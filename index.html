@@ -95,6 +95,20 @@ function on_load(buffer)
 	renderer = new MapRenderer(gfx, map, function() {
 		document.body.classList.remove("loading");
 		document.title = map.name + " - Soldat Map Viewer";
+
+		var v = [].concat.apply([], map.polygons.map(function(p) { return p.vertices; }));
+		var x = v.map(function(v) { return v.x; });
+		var y = v.map(function(v) { return v.y; });
+
+		var xmin = Math.min.apply(null, x);
+		var xmax = Math.max.apply(null, x);
+		var ymin = Math.min.apply(null, y);
+		var ymax = Math.max.apply(null, y);
+
+		dx = xmin + (xmax - xmin) * 0.5;
+		dy = ymin + (ymax - ymin) * 0.5;
+		scale = 0.9 * Math.min(window.innerWidth / (xmax - xmin), window.innerHeight / (ymax - ymin));
+
 		draw();
 	});
 }
