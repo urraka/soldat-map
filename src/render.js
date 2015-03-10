@@ -79,6 +79,7 @@ function Renderer(gfx, map, on_ready)
 
 			image.onload = function() {
 				textures[index] = create_texture(image, index === 0);
+				textures[index].src = image.src;
 				++loaded === total && on_done();
 			};
 
@@ -109,9 +110,6 @@ function Renderer(gfx, map, on_ready)
 
 	function create_texture(image, pot)
 	{
-		if (image.src.split(".").pop().toLowerCase() === "png")
-			return gfx.create_texture(image);
-
 		var canvas = document.createElement("canvas");
 		var context = canvas.getContext("2d");
 
