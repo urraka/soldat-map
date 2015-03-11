@@ -61,6 +61,27 @@ document.querySelector(".view-options").addEventListener("change", function(even
 
 			renderer.config("highlight_list", value);
 		}
+		else if (name.lastIndexOf("objects_", 0) === 0)
+		{
+			if (event.target.checked)
+			{
+				document.querySelector("#cfg-objects").checked = true;
+				renderer.config("objects", true);
+			}
+			else if (document.querySelectorAll("#cfg-objects-options input:checked").length === 0)
+			{
+				document.querySelector("#cfg-objects").checked = false;
+				renderer.config("objects", false);
+			}
+
+			var inputs = document.querySelectorAll("#cfg-objects-options input:checked");
+
+			var value = [].slice.call(inputs).map(function(input) {
+				return parseInt(input.id.split("_").pop());
+			});
+
+			renderer.config("objects_list", value);
+		}
 		else if (name.lastIndexOf("scenery", 0) === 0)
 		{
 			var scenery = document.querySelector("#cfg-scenery");

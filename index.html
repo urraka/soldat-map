@@ -30,6 +30,10 @@
 		<label for="cfg-wireframe"></label><label for="cfg-wireframe">Wireframe</label>
 	</div>
 	<div>
+		<input id="cfg-colliders" type="checkbox" />
+		<label for="cfg-colliders"></label><label for="cfg-colliders">Colliders</label>
+	</div>
+	<div>
 		<input checked="checked" id="cfg-scenery" type="checkbox" />
 		<label for="cfg-scenery"></label><label for="cfg-scenery">Scenery</label>
 	</div>
@@ -46,6 +50,42 @@
 			<input checked="checked" id="cfg-scenery_front" type="checkbox" />
 			<label for="cfg-scenery_front"></label><label for="cfg-scenery_front">Front</label>
 		</div>
+	</div>
+	<div>
+		<input id="cfg-objects" type="checkbox" />
+		<label for="cfg-objects"></label><label for="cfg-objects">Spawns</label>
+	</div>
+	<div id="cfg-objects-options" class="indent">
+		<script>
+			(function(options) {
+				for (var i = 0, n = options.length; i < n; i++)
+				{
+					document.writeln("<div>");
+					document.writeln("<input checked id=\"cfg-objects_" + i + "\" type=\"checkbox\" />");
+					document.writeln("<label for=\"cfg-objects_" + i + "\"></label>" +
+						"<label for=\"cfg-objects_" + i + "\">" + options[i] + "</label>");
+					document.writeln("</div>");
+				}
+			})([
+				"General",
+				"Alpha",
+				"Bravo",
+				"Charlie",
+				"Delta",
+				"Alpha Flag",
+				"Bravo Flag",
+				"Grenades",
+				"Medkits",
+				"Clusters",
+				"Vest",
+				"Flamer",
+				"Berserker",
+				"Predator",
+				"Yellow Flag",
+				"Rambo Bow",
+				"Stat Gun"
+			]);
+		</script>
 	</div>
 	<div>
 		<input id="cfg-highlight" type="checkbox" />

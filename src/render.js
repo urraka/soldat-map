@@ -2,6 +2,44 @@
 
 exports.MapRenderer = Renderer;
 
+var objects_atlas = {
+	"width":86,
+	"height":127,
+	"sprites": [
+		{"x":1,"y":91,"width":18,"height":18},
+		{"x":20,"y":91,"width":18,"height":18},
+		{"x":46,"y":1,"width":18,"height":18},
+		{"x":46,"y":20,"width":18,"height":18},
+		{"x":46,"y":39,"width":18,"height":18},
+		{"x":46,"y":58,"width":18,"height":18},
+		{"x":58,"y":77,"width":18,"height":18},
+		{"x":69,"y":96,"width":16,"height":16},
+		{"x":65,"y":1,"width":16,"height":16},
+		{"x":65,"y":18,"width":16,"height":16},
+		{"x":1,"y":110,"width":16,"height":16},
+		{"x":18,"y":110,"width":16,"height":16},
+		{"x":35,"y":110,"width":16,"height":16},
+		{"x":52,"y":110,"width":16,"height":16},
+		{"x":39,"y":91,"width":18,"height":18},
+		{"x":1,"y":1,"width":44,"height":44},
+		{"x":1,"y":46,"width":44,"height":44}
+	]
+};
+
+for (var i = 0; i < objects_atlas.sprites.length; i++)
+{
+	objects_atlas.sprites[i].uv = [
+		{
+			x: objects_atlas.sprites[i].x / objects_atlas.width,
+			y: objects_atlas.sprites[i].y / objects_atlas.height
+		},
+		{
+			x: (objects_atlas.sprites[i].x + objects_atlas.sprites[i].width) / objects_atlas.width,
+			y: (objects_atlas.sprites[i].y + objects_atlas.sprites[i].height) / objects_atlas.height
+		}
+	];
+}
+
 function Renderer(gfx, map, on_ready)
 {
 	this.draw = draw;
@@ -9,10 +47,15 @@ function Renderer(gfx, map, on_ready)
 
 	var vbo = null;
 	var ibo = null;
+	var objects_vbo = null;
+	var objects_ibo = null;
 	var batches = {};
 	var active_batches = [];
+	var active_objects = map.spawnpoints;
 	var textures = [];
 	var black_texture = null;
+	var collider_texture = null;
+	var objects_texture = null;
 
 	var config = {
 		background: true,
@@ -20,10 +63,13 @@ function Renderer(gfx, map, on_ready)
 		scenery_middle: true,
 		scenery_front: true,
 		polygons: true,
-		wireframe: false,
 		texture: true,
+		wireframe: false,
+		colliders: false,
 		highlight: false,
-		highlight_list: []
+		highlight_list: [],
+		objects: false,
+		objects_list: objects_atlas.sprites.map(function(x,i){return i;})
 	};
 
 	function Batch(mode, ibo_index, vbo_index)
@@ -50,7 +96,7 @@ function Renderer(gfx, map, on_ready)
 		for (var i = 0, n = calls.length; i < n; i++)
 		{
 			var call = calls[i];
-			gfx.bind(textures[call.texture + 2]);
+			gfx.bind(textures[call.texture + 4]); // "+ x" -> amount unshifted after loading textures
 			gfx.draw(mode, vbo, ibo, base + call.offset, call.count);
 		}
 	}
@@ -62,6 +108,25 @@ function Renderer(gfx, map, on_ready)
 			rgba[3] = 1;
 		});
 
+		collider_texture = gfx.create_texture(256, 256, gfx.RGBA, function(x, y, rgba) {
+			var inner = 1;
+			var outer = 0.5;
+			var dx = x - 128;
+			var dy = y - 128;
+			var dist = Math.sqrt(dx * dx + dy * dy);
+			var color = inner + (outer - inner) * (dist / 128);
+			var t = Math.max(Math.min((dist - 127) / (128 - 127), 1), 0);
+			var alpha = 1 - t * t * (3 - 2 * t);
+
+			rgba[0] = 1;
+			rgba[1] = 1;
+			rgba[2] = 1;
+			rgba[3] = color * alpha;
+		});
+
+		collider_texture.generate_mipmap();
+		collider_texture.filter(gfx.LinearMipmapLinear, gfx.Linear);
+
 		for (var i = 0; i < map.images.length + 1; i++)
 			textures.push(null);
 
@@ -70,7 +135,7 @@ function Renderer(gfx, map, on_ready)
 		for (var i = 0, n = map.objects.length; i < n; i++)
 			textures[map.objects[i].style] = "data/scenery-gfx/" + map.images[map.objects[i].style - 1];
 
-		var total = 0;
+		var total = 1;
 		var loaded = 0;
 
 		function load(index)
@@ -96,6 +161,15 @@ function Renderer(gfx, map, on_ready)
 
 		for (var i = 0; i < textures.length; i++)
 			textures[i] !== null && load(i);
+
+		var objects_image = new Image();
+
+		objects_image.onload = function() {
+			objects_texture = gfx.create_texture(objects_image);
+			++loaded === total && on_done();
+		};
+
+		objects_image.src = "data/objects/objects.png";
 	}
 
 	function next_pot(x)
@@ -276,6 +350,7 @@ function Renderer(gfx, map, on_ready)
 		var polygons = map.polygons;
 		var highlight = map.polygons;
 		var edges = get_edges();
+		var colliders = map.colliders;
 
 		// calculate total buffer sizes and create them
 
@@ -286,7 +361,8 @@ function Renderer(gfx, map, on_ready)
 			4 * scenery_front.length +
 			3 * polygons.length +
 			3 * highlight.length +
-			2 * edges.length;
+			2 * edges.length +
+			4 * colliders.length;
 
 		var ibo_size =
 			6 +
@@ -295,7 +371,8 @@ function Renderer(gfx, map, on_ready)
 			6 * scenery_front.length +
 			3 * polygons.length +
 			3 * highlight.length +
-			2 * edges.length;
+			2 * edges.length +
+			6 * colliders.length;
 
 		vbo = gfx.create_vbo(vbo_size, gfx.Static);
 		ibo = gfx.create_ibo(ibo_size, gfx.Static);
@@ -382,10 +459,46 @@ function Renderer(gfx, map, on_ready)
 			vbo.set(idx.vbo++, edge[1].x, -edge[1].y, edge[1].u, edge[1].v, colors[1]);
 		}
 
+		// colliders batch
+
+		var color = [255, 0, 0, 255];
+
+		batches.colliders = new Batch(gfx.Triangles, idx.ibo, idx.vbo);
+		batches.colliders.calls.push(new DrawCall(0, 6 * colliders.length, -3));
+
+		for (var i = 0, n = colliders.length; i < n; i++)
+		{
+			var collider = colliders[i];
+			var x = collider.x;
+			var y = -collider.y;
+			var r = collider.radius;
+
+			ibo.set(idx.ibo++, idx.vbo + 0);
+			ibo.set(idx.ibo++, idx.vbo + 1);
+			ibo.set(idx.ibo++, idx.vbo + 2);
+			ibo.set(idx.ibo++, idx.vbo + 2);
+			ibo.set(idx.ibo++, idx.vbo + 3);
+			ibo.set(idx.ibo++, idx.vbo + 0);
+
+			vbo.set(idx.vbo++, x - r, y - r, 0, 0, color);
+			vbo.set(idx.vbo++, x + r, y - r, 1, 0, color);
+			vbo.set(idx.vbo++, x + r, y + r, 1, 1, color);
+			vbo.set(idx.vbo++, x - r, y + r, 0, 1, color);
+		}
+
+		// create separate buffer for objects
+
+		objects_vbo = gfx.create_vbo(4 * map.spawnpoints.length, gfx.Stream);
+		objects_ibo = gfx.create_ibo(6 * map.spawnpoints.length, gfx.Stream);
+
+		for (var i = 0, n = 4 * map.spawnpoints.length; i < n; i += 4)
+			objects_ibo.push(i, i + 1, i + 2, i + 2, i + 3, i);
+
 		// upload data
 
 		vbo.upload();
 		ibo.upload();
+		objects_ibo.upload();
 
 		// set active batches
 
@@ -402,6 +515,7 @@ function Renderer(gfx, map, on_ready)
 		config.polygons       && active_batches.push(batches.polygons);
 		config.highlight      && active_batches.push(batches.highlight);
 		config.scenery_front  && active_batches.push(batches.scenery_front);
+		config.colliders      && active_batches.push(batches.colliders);
 		config.wireframe      && active_batches.push(batches.wireframe);
 	}
 
@@ -436,21 +550,24 @@ function Renderer(gfx, map, on_ready)
 		if (arguments.length === 0)
 			return config;
 
-		if ((name in batches) && (config[name] !== value))
+		config[name] = value;
+
+		if (name in batches)
 		{
-			config[name] = value;
 			update_active_batches();
 		}
 		else if (name === "texture")
 		{
-			config[name] = value;
 			batches.polygons.calls[0].texture = value ? 0 : -1;
 			batches.wireframe.calls[0].texture = value ? -1 : -2;
 		}
 		else if (name === "highlight_list")
 		{
-			config[name] = value;
 			update_highlight_batch();
+		}
+		else if (name === "objects_list")
+		{
+			active_objects = map.spawnpoints.filter(function(s) { return value.indexOf(s.team) !== -1; });
 		}
 	}
 
@@ -466,13 +583,43 @@ function Renderer(gfx, map, on_ready)
 
 		for (var i = 0, n = active_batches.length; i < n; i++)
 			active_batches[i].draw();
+
+		if (config.objects && active_objects.length > 0)
+		{
+			objects_vbo.clear();
+
+			var white = [255, 255, 255, 255];
+
+			for (var i = 0, n = active_objects.length; i < n; i++)
+			{
+				var object = active_objects[i];
+				var sprite = objects_atlas.sprites[object.team];
+				var w = sprite.width;
+				var h = sprite.height;
+				var uv = sprite.uv;
+				var x = Math.floor(mat3mulx(m, object.x, -object.y) - 0.5 * w);
+				var y = Math.floor(mat3muly(m, object.x, -object.y) - 0.5 * h);
+
+				objects_vbo.push(    x,     y, uv[0].x, uv[1].y, white);
+				objects_vbo.push(x + w,     y, uv[1].x, uv[1].y, white);
+				objects_vbo.push(x + w, y + h, uv[1].x, uv[0].y, white);
+				objects_vbo.push(    x, y + h, uv[0].x, uv[0].y, white);
+			}
+
+			objects_vbo.upload();
+
+			gfx.transform(mat3identity(m));
+			gfx.bind(objects_texture);
+			gfx.draw(gfx.Triangles, objects_vbo, objects_ibo, 0, 6 * n);
+		}
 	}
 
 	// initialize
 
 	load_textures(function() {
 		textures[0].wrap(gfx.Repeat, gfx.Repeat);
-		textures.unshift(black_texture, gfx.White);
+		objects_texture.filter(gfx.Nearest, gfx.Nearest);
+		textures.unshift(objects_texture, collider_texture, black_texture, gfx.White);
 		init();
 		on_ready();
 	});
