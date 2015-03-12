@@ -4,14 +4,19 @@
 <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
 <title>Soldat Map Viewer</title>
 <link rel="stylesheet" type="text/css" href="style.css" />
+<script src="lib/jquery-1.11.2.min.js"></script>
+<script src="lib/jquery-ui.min.js"></script>
 <script src="src/gfx.js"></script>
 <script src="src/map.js"></script>
 <script src="src/render.js"></script>
+<script src="src/fuzzy.js"></script>
+<script src="data/maplist.js"></script>
 </head>
 <body class="loading">
 <div class="loader">LOADING</div>
 <div class="error">MAP NOT FOUND</div>
 <canvas></canvas>
+<div id="search-container" class="ui-widget"><input id="search" /></div>
 <div class="view-options">
 	<div>
 		<input checked="checked" id="cfg-background" type="checkbox" />

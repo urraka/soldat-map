@@ -7,6 +7,21 @@ var dy = 0;
 var scale = 1;
 var mouse = {x: window.innerWidth/2, y: window.innerHeight/2};
 
+var fuzzy = new FuzzySearch(maplist);
+
+$("#search").autocomplete({
+	appendTo: $("#search-container"),
+	minLength: 0,
+	source: function(req, response) {
+		response(fuzzy.find(req.term));
+	},
+	select: function() {
+		setTimeout(function() {
+			window.location.hash = $("#search").val();
+		}, 0);
+	}
+}).keydown(function(e){ e.stopPropagation(); }).focus();
+
 if (window.location.hash.length > 1)
 	load_map(window.location.hash.substr(1));
 else
@@ -24,6 +39,7 @@ canvas.addEventListener("wheel", wheel);
 canvas.addEventListener("dblclick", dblclick);
 
 document.querySelector(".view-options").addEventListener("mousedown", function(event) {
+	$("#search").blur();
 	event.preventDefault();
 	event.stopPropagation();
 });
@@ -137,6 +153,7 @@ function on_load(buffer)
 		document.body.classList.remove("loading");
 		document.body.classList.add("loaderror");
 		document.title = "Soldat Map Viewer";
+		$("#search").focus();
 		return;
 	}
 
@@ -145,6 +162,7 @@ function on_load(buffer)
 	renderer = new MapRenderer(gfx, map, function() {
 		document.body.classList.remove("loading");
 		document.title = map.name + " - Soldat Map Viewer";
+		$("#search").focus();
 
 		var v = [].concat.apply([], map.polygons.map(function(p) { return p.vertices; }));
 		var x = v.map(function(v) { return v.x; });
@@ -213,6 +231,7 @@ function keydown(event)
 
 function mousedown(event)
 {
+	$("#search").blur();
 	event.preventDefault();
 
 	var x = event.clientX;
