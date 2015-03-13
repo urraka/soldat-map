@@ -47,21 +47,35 @@ FuzzySearch.prototype.find = function(text)
 	if (empty || dicts.length === 0)
 		return [];
 
-	var subset = dicts.slice(1).reduce(intersection, dicts[0]);
-	var re = new RegExp(lower.split("").join(".*"));
+	var matches = null;
 
-	var matches = subset.filter(function(i) { return re.test(strings_lc[i]); });
+	if (lower.length === 1)
+	{
+		matches = dicts[0].map(function(i) { return strings[i]; });
+		matches.sort();
+	}
+	else
+	{
+		var re = new RegExp(lower.split("").join(".*"));
+		var subset = dicts.slice(1).reduce(intersection, dicts[0]);
 
-	matches.sort(function(a, b) {
-		var sa = strings_lc[a];
-		var sb = strings_lc[b];
-		var aa = +(sa.indexOf(lower) !== -1);
-		var bb = +(sb.indexOf(lower) !== -1);
+		matches = subset.filter(function(i) { return re.test(strings_lc[i]); });
 
-		return (bb - aa) || (a < b ? -1 : +(a > b));
-	});
+		matches.sort(function(a, b) {
+			var sa = strings_lc[a];
+			var sb = strings_lc[b];
+			var sa_lc = strings_lc[a];
+			var sb_lc = strings_lc[b];
+			var aa = +(sa_lc.indexOf(lower) !== -1);
+			var bb = +(sb_lc.indexOf(lower) !== -1);
 
-	return matches.map(function(i) { return strings[i]; });
+			return (bb - aa) || (sa < sb ? -1 : +(sa > sb));
+		});
+
+		matches = matches.map(function(i) { return strings[i]; });
+	}
+
+	return matches;
 }
 
 function str_chars(s)
