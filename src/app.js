@@ -173,9 +173,12 @@ function on_load(buffer)
 		var ymin = Math.min.apply(null, y);
 		var ymax = Math.max.apply(null, y);
 
-		dx = xmin + (xmax - xmin) * 0.5;
+		var wopt = document.querySelector(".view-options").offsetWidth;
+		var W = window.innerWidth - wopt;
+
+		scale = 0.9 * Math.min(W / (xmax - xmin), window.innerHeight / (ymax - ymin));
+		dx = xmin + (xmax - xmin) * 0.5 - 0.5 * wopt / scale;
 		dy = ymin + (ymax - ymin) * 0.5;
-		scale = 0.9 * Math.min(window.innerWidth / (xmax - xmin), window.innerHeight / (ymax - ymin));
 
 		for (var name in config)
 			renderer.config(name, config[name]);

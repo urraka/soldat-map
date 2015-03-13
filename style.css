@@ -34,7 +34,7 @@ canvas {display:block;width:100%;height:100%;}
 	overflow-x: hidden;
 }
 
-.ui-state-focus {color:#FFF;}
+.ui-state-focus {color:#FFF;background:#00F;}
 .ui-helper-hidden-accessible {display:none;}
 
 .view-options {position:absolute;top:0;right:0;bottom:0;background:#000;border-left:1px solid #FF0;}
