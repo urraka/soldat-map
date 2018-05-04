@@ -166,10 +166,11 @@ function load_map(name)
 		return;
 	}
 
-	http_get("data/" + parts[0] + "/maps/" + parts[1] + ".pms", "arraybuffer", on_load.bind(null, parts[0]));
+	http_get("data/" + parts[0] + "/maps/" + parts[1] + ".pms", "arraybuffer",
+		on_load.bind(null, window.location.hash.substr(1).replace(/\//g, "_"), parts[0]));
 }
 
-function on_load(root, buffer)
+function on_load(id, root, buffer)
 {
 	dx = 0;
 	dy = 0;
@@ -187,6 +188,7 @@ function on_load(root, buffer)
 	}
 
 	map = Map.parse(buffer);
+	map.id = id;
 
 	renderer = new MapRenderer(gfx, map, root, function() {
 		document.body.classList.remove("loading");

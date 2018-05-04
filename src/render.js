@@ -46,6 +46,7 @@ function Renderer(gfx, map, root, on_ready)
 
 	this.draw = draw;
 	this.config = set_config;
+	this.screenshot = screenshot;
 
 	var vbo = null;
 	var ibo = null;
@@ -632,6 +633,51 @@ function Renderer(gfx, map, root, on_ready)
 			gfx.bind(objects_texture);
 			gfx.draw(gfx.Triangles, objects_vbo, objects_ibo, 0, 6 * n);
 		}
+	}
+
+	function screenshot(ratio)
+	{
+		var v = [].concat.apply([], map.polygons.map(function(p) { return p.vertices; }));
+		var x = v.map(function(v) { return v.x; });
+		var y = v.map(function(v) { return v.y; });
+		var margin = 10;
+
+		var xmin = Math.floor(Math.min.apply(null, x)) - margin;
+		var xmax = Math.ceil(Math.max.apply(null, x)) + margin;
+		var ymin = Math.floor(Math.min.apply(null, y)) - margin;
+		var ymax = Math.ceil(Math.max.apply(null, y)) + margin;
+
+		var w = Math.abs(xmax - xmin);
+		var h = Math.abs(ymax - ymin);
+
+		var old_w = gfx.canvas.width;
+		var old_h = gfx.canvas.height;
+
+		gfx.canvas.width = Math.floor(w * ratio);
+		gfx.canvas.height = Math.floor(h * ratio);
+		console.log(gfx.canvas.width, gfx.canvas.height);
+
+		w = gfx.canvas.width / ratio;
+		h = gfx.canvas.height / ratio;
+
+		gfx.viewport(0, 0, gfx.canvas.width, gfx.canvas.height);
+		gfx.projection(mat3ortho(0, w, 0, h, mat3()));
+		gfx.blend(gfx.SrcAlpha, gfx.OneMinusSrcAlpha, gfx.SrcAlpha, gfx.OneMinusSrcAlpha);
+		gfx.clear_color(0, 0, 0, 1);
+		gfx.clear();
+
+		draw(w / 2, h / 2, 1);
+
+		var url = gfx.canvas.toBlob(function(blob) {
+			var url = URL.createObjectURL(blob);
+			var link = document.createElement("a");
+			link.setAttribute("href", url);
+			link.setAttribute("download", map.id + ".png");
+			link.click();
+		}, "image/png");
+
+		gfx.canvas.width = old_w;
+		gfx.canvas.height = old_h;
 	}
 
 	// initialize
