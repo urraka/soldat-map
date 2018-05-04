@@ -40,8 +40,10 @@ for (var i = 0; i < objects_atlas.sprites.length; i++)
 	];
 }
 
-function Renderer(gfx, map, on_ready)
+function Renderer(gfx, map, root, on_ready)
 {
+	root = root.toLowerCase();
+
 	this.draw = draw;
 	this.config = set_config;
 
@@ -130,10 +132,28 @@ function Renderer(gfx, map, on_ready)
 		for (var i = 0; i < map.images.length + 1; i++)
 			textures.push(null);
 
-		textures[0] = "data/textures/" + map.texture;
+		function image_path(path) {
+			var ext = ["png", "jpg", "gif", "bmp"];
+			var parts = path.toLowerCase().split(".");
+			parts.pop();
+			path = parts.join(".");
+
+			for (var i = 0; i < ext.length; i++) {
+				var filepath = filelist.find(function(filepath) {
+					return filepath.toLowerCase() === (root + "/" + path + "." + ext[i]);
+				});
+
+				if (filepath)
+					return "data/" + filepath;
+			}
+
+			return null;
+		}
+
+		textures[0] = image_path("textures/" + map.texture);
 
 		for (var i = 0, n = map.objects.length; i < n; i++)
-			textures[map.objects[i].style] = "data/scenery-gfx/" + map.images[map.objects[i].style - 1];
+			textures[map.objects[i].style] = image_path("scenery-gfx/" + map.images[map.objects[i].style - 1]);
 
 		var total = 1;
 		var loaded = 0;
@@ -153,7 +173,7 @@ function Renderer(gfx, map, on_ready)
 				++loaded === total && on_done();
 			};
 
-			image.src = textures[index].toLowerCase();
+			image.src = textures[index];
 		}
 
 		for (var i = 0; i < textures.length; i++)
@@ -471,7 +491,7 @@ function Renderer(gfx, map, on_ready)
 			var collider = colliders[i];
 			var x = collider.x;
 			var y = -collider.y;
-			var r = collider.radius;
+			var r = collider.radius / 2.0;
 
 			ibo.set(idx.ibo++, idx.vbo + 0);
 			ibo.set(idx.ibo++, idx.vbo + 1);

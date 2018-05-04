@@ -6,42 +6,54 @@ var dx = 0;
 var dy = 0;
 var scale = 1;
 var mouse = {x: window.innerWidth/2, y: window.innerHeight/2};
+var filelist =
 
-var fuzzy = new FuzzySearch(maplist);
+http_get("data/filelist", "text", function(data) {
+	filelist = data
+		.split(/\r?\n/)
+		.filter(function(line) { return line !== ""; });
 
-$("#search").autocomplete({
-	appendTo: $("#search-container"),
-	minLength: 0,
-	source: function(req, response) {
-		response(fuzzy.find(req.term));
-	},
-	select: function() {
-		setTimeout(function() {
-			window.location.hash = $("#search").val();
-		}, 0);
-	}
-}).keydown(function(e){ e.stopPropagation(); }).focus();
+	var maplist = filelist
+		.filter(function(filepath) {
+			return filepath.split(".").pop() === "pms";
+		})
+		.map(function(filepath) {
+			var parts = filepath.split("/");
+			return parts[0] + "/" + parts.pop().slice(0, -4);
+		});
 
-if (window.location.hash.length > 1)
-	load_map(window.location.hash.substr(1));
-else
-	load_map("ctf_Ash");
+	var fuzzy = new FuzzySearch(maplist);
 
-window.addEventListener("hashchange", function() {
-	load_map(window.location.hash.substr(1));
-});
+	$("#search").autocomplete({
+		appendTo: $("#search-container"),
+		minLength: 0,
+		source: function(req, response) {
+			response(fuzzy.find(req.term));
+		},
+		select: function() {
+			setTimeout(function() {
+				window.location.hash = $("#search").val();
+			}, 0);
+		}
+	}).keydown(function(e){ e.stopPropagation(); }).focus();
 
-window.addEventListener("resize", draw);
-canvas.addEventListener("mousedown", mousedown);
-window.addEventListener("mousemove", mousemove);
-window.addEventListener("keydown", keydown);
-canvas.addEventListener("wheel", wheel);
-canvas.addEventListener("dblclick", dblclick);
+	if (window.location.hash.length > 1)
+		load_map(window.location.hash.substr(1));
+	else
+		load_map(maplist[Math.floor(Math.random() * maplist.length)]);
 
-document.querySelector(".view-options").addEventListener("mousedown", function(event) {
-	$("#search").blur();
-	event.preventDefault();
-	event.stopPropagation();
+	window.addEventListener("hashchange", function() {
+		load_map(window.location.hash.substr(1));
+	});
+
+	window.addEventListener("resize", draw);
+	canvas.addEventListener("mousedown", mousedown);
+	window.addEventListener("mousemove", mousemove);
+	window.addEventListener("keydown", keydown);
+	canvas.addEventListener("wheel", wheel);
+	canvas.addEventListener("dblclick", dblclick);
+	document.querySelector(".view-options").addEventListener("mousedown", on_view_options_mousedown);
+	document.querySelector(".view-options").addEventListener("change", on_view_options_change);
 });
 
 function any_checked(selector)
@@ -50,7 +62,14 @@ function any_checked(selector)
 	return [].slice.call(inputs).some(function(input) { return input.checked; });
 }
 
-document.querySelector(".view-options").addEventListener("change", function(event)
+function on_view_options_mousedown(event)
+{
+	$("#search").blur();
+	event.preventDefault();
+	event.stopPropagation();
+}
+
+function on_view_options_change(event)
 {
 	if (renderer)
 	{
@@ -130,17 +149,27 @@ document.querySelector(".view-options").addEventListener("change", function(even
 
 		draw();
 	}
-});
+}
 
 function load_map(name)
 {
 	document.body.classList.add("loading");
 	document.body.classList.remove("loaderror");
 
-	http_get("data/maps/" + name + ".pms", on_load);
+	var parts = name.split("/");
+
+	if (parts.length === 1)
+		parts.unshift("171");
+
+	if (window.location.hash.substr(1) !== parts[0] + "/" + parts[1]) {
+		window.location.hash = parts[0] + "/" + parts[1];
+		return;
+	}
+
+	http_get("data/" + parts[0] + "/maps/" + parts[1] + ".pms", "arraybuffer", on_load.bind(null, parts[0]));
 }
 
-function on_load(buffer)
+function on_load(root, buffer)
 {
 	dx = 0;
 	dy = 0;
@@ -159,7 +188,7 @@ function on_load(buffer)
 
 	map = Map.parse(buffer);
 
-	renderer = new MapRenderer(gfx, map, function() {
+	renderer = new MapRenderer(gfx, map, root, function() {
 		document.body.classList.remove("loading");
 		document.title = map.name + " - Soldat Map Viewer";
 		$("#search").focus();
@@ -281,11 +310,11 @@ function draw()
 	renderer.draw(1/scale * w/2 + dx, 1/scale * h/2 + dy, scale);
 }
 
-function http_get(url, callback)
+function http_get(url, type, callback)
 {
 	var request = new XMLHttpRequest();
 	request.open("GET", url);
-	request.responseType = "arraybuffer";
+	request.responseType = type;
 
 	request.addEventListener("loadend", function() {
 		callback(request.status === 200 ? request.response : null);
