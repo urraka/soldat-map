@@ -14,11 +14,11 @@ http_get("data/filelist", "text", function(data) {
 		.filter(function(line) { return line !== ""; });
 
 	var maplist = filelist
-		.filter(function(filepath) {
-			return filepath.split(".").pop() === "pms";
+		.filter(function(path) {
+			return path.split(".").pop() === "pms";
 		})
-		.map(function(filepath) {
-			var parts = filepath.split("/");
+		.map(function(path) {
+			var parts = path.split("/");
 			return parts[0] + "/" + parts.pop().slice(0, -4);
 		});
 
@@ -37,10 +37,28 @@ http_get("data/filelist", "text", function(data) {
 		}
 	}).keydown(function(e){ e.stopPropagation(); }).focus();
 
-	if (window.location.hash.length > 1)
+	if (window.location.hash.length > 1) {
 		load_map(window.location.hash.substr(1));
-	else
-		load_map(maplist[Math.floor(Math.random() * maplist.length)]);
+	}
+	else {
+		var version = filelist
+			.map(function(path) {
+				return path.split("/").shift();
+			})
+			.filter(function(val, idx, self) {
+				return self.indexOf(val) === idx
+			})
+			.sort()
+			.pop();
+
+		var random_list = maplist.filter(function(name) {
+			return name.startsWith(version);
+		});
+
+		var random_index = Math.floor(Math.random() * random_list.length);
+
+		load_map(random_list[random_index]);
+	}
 
 	window.addEventListener("hashchange", function() {
 		load_map(window.location.hash.substr(1));
@@ -54,12 +72,45 @@ http_get("data/filelist", "text", function(data) {
 	canvas.addEventListener("dblclick", dblclick);
 	document.querySelector(".view-options").addEventListener("mousedown", on_view_options_mousedown);
 	document.querySelector(".view-options").addEventListener("change", on_view_options_change);
+	document.querySelector("#screenshot-scale").addEventListener("change", on_screenshot_scale_change);
+	document.querySelector("#screenshot").addEventListener("click", on_screenshot);
 });
 
 function any_checked(selector)
 {
 	var inputs = document.querySelectorAll(selector);
 	return [].slice.call(inputs).some(function(input) { return input.checked; });
+}
+
+function on_screenshot_scale_change()
+{
+	var input = document.querySelector("#screenshot-scale");
+	var scale = parseFloat(input.value);
+
+	if (isNaN(scale) || !isFinite(scale) || scale <= 0) {
+		scale = 1;
+	}
+
+	var val = scale.toString() + "x";
+
+	if (val !== input.value) {
+		input.value = scale.toString() + "x";
+	}
+}
+
+function on_screenshot()
+{
+	if (renderer) {
+		var input = document.querySelector("#screenshot-scale");
+		var scale = parseFloat(input.value);
+
+		if (isNaN(scale) || !isFinite(scale) || scale <= 0) {
+			scale = 1;
+		}
+
+		renderer.screenshot(scale);
+		draw();
+	}
 }
 
 function on_view_options_mousedown(event)
@@ -266,6 +317,7 @@ function keydown(event)
 function mousedown(event)
 {
 	$("#search").blur();
+	$("#screenshot-scale").blur();
 	event.preventDefault();
 
 	var x = event.clientX;
