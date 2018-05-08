@@ -655,7 +655,6 @@ function Renderer(gfx, map, root, on_ready)
 
 		gfx.canvas.width = Math.floor(w * ratio);
 		gfx.canvas.height = Math.floor(h * ratio);
-		console.log(gfx.canvas.width, gfx.canvas.height);
 
 		w = gfx.canvas.width / ratio;
 		h = gfx.canvas.height / ratio;
@@ -671,9 +670,13 @@ function Renderer(gfx, map, root, on_ready)
 		var url = gfx.canvas.toBlob(function(blob) {
 			var url = URL.createObjectURL(blob);
 			var link = document.createElement("a");
+			
 			link.setAttribute("href", url);
 			link.setAttribute("download", map.id + ".png");
+			
+			document.body.appendChild(link);
 			link.click();
+			document.body.removeChild(link);
 		}, "image/png");
 
 		gfx.canvas.width = old_w;
