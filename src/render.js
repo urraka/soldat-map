@@ -121,9 +121,9 @@ function Renderer(gfx, map, root, on_ready)
 			var t = Math.max(Math.min((dist - 127) / (128 - 127), 1), 0);
 			var alpha = 1 - t * t * (3 - 2 * t);
 
-			rgba[0] = 1;
-			rgba[1] = 1;
-			rgba[2] = 1;
+			rgba[0] = alpha * alpha;
+			rgba[1] = alpha * alpha;
+			rgba[2] = alpha * alpha;
 			rgba[3] = color * alpha;
 		});
 
@@ -186,7 +186,7 @@ function Renderer(gfx, map, root, on_ready)
 		var objects_image = new Image();
 
 		objects_image.onload = function() {
-			objects_texture = gfx.create_texture(objects_image);
+			objects_texture = create_texture(objects_image);
 			++loaded === total && on_done();
 		};
 
@@ -233,6 +233,9 @@ function Renderer(gfx, map, root, on_ready)
 				{
 					data[i + 1] = 0;
 					data[i + 3] = 0;
+				}
+				for (var j = 0; j < 3; j++) {
+					data[i + j] = 255.0 * ((data[i + j] / 255.0) * (data[i + 3] / 255.0));
 				}
 			}
 		}
@@ -661,7 +664,7 @@ function Renderer(gfx, map, root, on_ready)
 
 		gfx.viewport(0, 0, gfx.canvas.width, gfx.canvas.height);
 		gfx.projection(mat3ortho(0, w, 0, h, mat3()));
-		gfx.blend(gfx.SrcAlpha, gfx.OneMinusSrcAlpha, gfx.SrcAlpha, gfx.OneMinusSrcAlpha);
+		gfx.blend(gfx.One, gfx.OneMinusSrcAlpha, gfx.One, gfx.OneMinusSrcAlpha);
 		gfx.clear_color(0, 0, 0, 0);
 		gfx.clear();
 

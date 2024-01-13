@@ -28,7 +28,7 @@ var vs_src = [
 	"varying vec4 c;",
 	"",
 	"void main(void) {",
-	"	c = clr;",
+	"	c = vec4(clr.rgb * clr.a, clr.a);",
 	"	t = tex;",
 	"	gl_Position = vec4(mvp * vec3(pos, 1.0), 1.0);",
 	"}",

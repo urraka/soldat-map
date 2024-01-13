@@ -357,7 +357,7 @@ function draw()
 
 	gfx.viewport(0, 0, w, h);
 	gfx.projection(mat3ortho(0, w, 0, h, mat3()));
-	gfx.blend(gfx.SrcAlpha, gfx.OneMinusSrcAlpha, gfx.SrcAlpha, gfx.OneMinusSrcAlpha);
+	gfx.blend(gfx.One, gfx.OneMinusSrcAlpha, gfx.One, gfx.OneMinusSrcAlpha);
 	gfx.clear_color(0, 0, 0, 0);
 	gfx.clear();
 
