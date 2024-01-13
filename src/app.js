@@ -1,5 +1,5 @@
 var canvas = document.querySelector("canvas");
-var gfx = gfx_create_context(canvas, {alpha: false});
+var gfx = gfx_create_context(canvas, {alpha: true});
 var map = null;
 var renderer = null;
 var dx = 0;
@@ -358,7 +358,7 @@ function draw()
 	gfx.viewport(0, 0, w, h);
 	gfx.projection(mat3ortho(0, w, 0, h, mat3()));
 	gfx.blend(gfx.SrcAlpha, gfx.OneMinusSrcAlpha, gfx.SrcAlpha, gfx.OneMinusSrcAlpha);
-	gfx.clear_color(0, 0, 0, 1);
+	gfx.clear_color(0, 0, 0, 0);
 	gfx.clear();
 
 	renderer.draw(1/scale * w/2 + dx, 1/scale * h/2 + dy, scale);

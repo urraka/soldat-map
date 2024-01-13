@@ -662,7 +662,7 @@ function Renderer(gfx, map, root, on_ready)
 		gfx.viewport(0, 0, gfx.canvas.width, gfx.canvas.height);
 		gfx.projection(mat3ortho(0, w, 0, h, mat3()));
 		gfx.blend(gfx.SrcAlpha, gfx.OneMinusSrcAlpha, gfx.SrcAlpha, gfx.OneMinusSrcAlpha);
-		gfx.clear_color(0, 0, 0, 1);
+		gfx.clear_color(0, 0, 0, 0);
 		gfx.clear();
 
 		draw(w / 2, h / 2, 1);
