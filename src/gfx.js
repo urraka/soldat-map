@@ -36,9 +36,9 @@ var vs_src = [
 ].join("\n");
 
 var fs_src = [
-	"precision mediump float;",
-	"varying mediump vec2 t;",
-	"varying mediump vec4 c;",
+	"precision highp float;",
+	"varying highp vec2 t;",
+	"varying highp vec4 c;",
 	"uniform sampler2D s;",
 	"",
 	"void main(void) {",

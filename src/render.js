@@ -234,15 +234,14 @@ function Renderer(gfx, map, root, on_ready)
 					data[i + 1] = 0;
 					data[i + 3] = 0;
 				}
-				for (var j = 0; j < 3; j++) {
-					data[i + j] = 255.0 * ((data[i + j] / 255.0) * (data[i + 3] / 255.0));
-				}
+				const a = data[i + 3] / 255;
+				data[i + 0] = Math.round(data[i + 0] * a);
+				data[i + 1] = Math.round(data[i + 1] * a);
+				data[i + 2] = Math.round(data[i + 2] * a);
 			}
 		}
 
-		context.putImageData(imagedata, 0, 0);
-
-		return gfx.create_texture(canvas);
+		return gfx.create_texture(imagedata);
 	}
 
 	function get_edges()
@@ -664,7 +663,6 @@ function Renderer(gfx, map, root, on_ready)
 
 		gfx.viewport(0, 0, gfx.canvas.width, gfx.canvas.height);
 		gfx.projection(mat3ortho(0, w, 0, h, mat3()));
-		gfx.blend(gfx.One, gfx.OneMinusSrcAlpha, gfx.One, gfx.OneMinusSrcAlpha);
 		gfx.clear_color(0, 0, 0, 0);
 		gfx.clear();
 
